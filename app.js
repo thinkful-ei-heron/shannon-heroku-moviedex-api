@@ -6,7 +6,8 @@ const helmet = require('helmet');
 const movies = require('./movies.json');
 
 const app = express();
-app.use(morgan('dev'));
+const morganOption = process.env.NODE_ENV === 'production' ? 'tiny' : 'dev';
+app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
 
@@ -56,6 +57,20 @@ app.get('/movie', (req, res) => {
   return res.json(filteredMovies);
 });
 
-app.listen(8000, () => {
-  console.log('Listening on port 8000');
+
+app.use((error, req, res, next) => {
+  let response;
+  if (process.env.NODE_ENV === 'production'){
+    response = {error:{message: 'server error'}};
+  } else {
+    response = {error};
+  }
+  res
+    .send(500)
+    .json(response);
+});
+
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () => {
+  console.log(`Listening on port: ${PORT}`);
 });
